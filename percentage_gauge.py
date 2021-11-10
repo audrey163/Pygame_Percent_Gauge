@@ -37,9 +37,9 @@ class Gauge:
 
         for i in range(0, self.thickness):
 
-            pygame.gfxdraw.arc(screen, int(self.x_cord), int(self.y_cord), self.radius - i, -225, 270 - 225, self.circle_colour)
+            pygame.gfxdraw.arc(self.screen, int(self.x_cord), int(self.y_cord), self.radius - i, -225, 270 - 225, self.circle_colour)
             if percent >4:
-                pygame.gfxdraw.arc(screen, int(self.x_cord), int(self.y_cord), self.radius - i, -225, fill_angle - 225-8, ac)
+                pygame.gfxdraw.arc(self.screen, int(self.x_cord), int(self.y_cord), self.radius - i, -225, fill_angle - 225-8, ac)
 
         if percent < 4:
             return
@@ -47,11 +47,11 @@ class Gauge:
         if self.glow:
             for i in range(0,15):
                 ac [3] = int(150 - i*10)
-                pygame.gfxdraw.arc(screen, int(self.x_cord), int(self.y_cord), self.radius + i, -225, fill_angle - 225-8, ac)
+                pygame.gfxdraw.arc(self.screen, int(self.x_cord), int(self.y_cord), self.radius + i, -225, fill_angle - 225-8, ac)
 
             for i in range(0,15):
                 ac [3] = int(150 - i*10)
-                pygame.gfxdraw.arc(screen, int(self.x_cord), int(self.y_cord), self.radius -self.thickness - i, -225, fill_angle - 225-8, ac)
+                pygame.gfxdraw.arc(self.screen, int(self.x_cord), int(self.y_cord), self.radius -self.thickness - i, -225, fill_angle - 225-8, ac)
 
             angle_r = math.radians(fill_angle-225-8)
             lx,ly = int((self.radius-self.thickness/2)*math.cos(angle_r)), int( (self.radius-self.thickness/2)*math.sin(angle_r))
@@ -64,45 +64,48 @@ class Gauge:
 
             for i in range(0,10):
                 ac [3] = int(150 - i*15)
-                pygame.gfxdraw.arc(screen, int(lx), int(ly), (self.thickness//2)+i , fill_angle -225-10, fill_angle - 225-180-10, ac)
+                pygame.gfxdraw.arc(self.screen, int(lx), int(ly), (self.thickness//2)+i , fill_angle -225-10, fill_angle - 225-180-10, ac)
 
-
+class GaugeHandler(Gauge):
+	def __init__(self):	
+		self.settings = {
+			'background color' : (56, 56, 56),
+			'circle color' : (55, 77, 91),
+			'screen width' : 640,
+			'screen height' : 480,
+			'frame rate fps' : 100,
+			'font type' : 'Franklin Gothic Heavy',
+			'font size' : 100,
+			'thickness' : 50,
+			'radius' : 200,
+			'glow' : False,
+			'caption' : 'FMRI interactive gauge'
+		}
+		pygame.init()
+		self.clock = pygame.time.Clock()
+		self.screen = pygame.display.set_mode((self.settings['screen width'],self.settings['screen height']))
+		pygame.display.set_caption(self.settings['caption'])
+		FONT = pygame.font.SysFont(self.settings['font type'],self.settings['font size'])
+		self.gauge = Gauge(screen=self.screen,FONT=FONT,x_cord=self.settings['screen width']/2,y_cord=self.settings['screen height']/2,
+			thickness=self.settings['thickness'], radius=self.settings['radius'],circle_colour=self.settings['circle color'],glow=self.settings['glow'])
+		self.set(percentage=0)
+	def set(self,percentage):
+		assert(0 <= percentage and percentage <= 100)
+		self.percentage = percentage
+		self.screen.fill(self.settings['background color'])
+		self.gauge.draw(percent=self.percentage)
+		pygame.display.update()
+		self.clock.tick(self.settings['frame rate fps'])
 
 if __name__ == '__main__':
-    bg_c = (56, 56, 56)
-    circle_c = (55, 77, 91)
+	gauge = GaugeHandler()
+	percentage = 0
+	while True:
+		# FOR SHOWING CHANGE IN GAUGE
+		percentage+=1
+		if percentage > 100:
+			percentage = 0
+		gauge.set(percentage=percentage)
 
-    pygame.init()
-    width, height = (640, 480)
-    clock = pygame.time.Clock()
-    screen = pygame.display.set_mode((width, height))
-
-
-    pygame.display.set_caption('Wahaj Gauge Pygame')
-
-
-    fps = 10
-    FONT = pygame.font.SysFont('Franklin Gothic Heavy', 100)
-
-    my_gauge = Gauge(
-        screen=screen,
-        FONT=FONT,
-        x_cord=width / 2,
-        y_cord=height / 2,
-        thickness=50,
-        radius=200,
-        circle_colour=circle_c,
-        glow=False)
-
-    percentage = 0
-    while True:
-
-        # FOR SHOWING CHANGE IN GAUGE
-        percentage+=1
-        if percentage > 100:
-            percentage = 0
-
-        screen.fill(bg_c)
-        my_gauge.draw(percent=percentage)
-        pygame.display.update()
-        clock.tick(fps)
+	
+        

@@ -1,7 +1,8 @@
 import pygame
 import pygame.gfxdraw
 import math
-
+import socket
+import argparse
 
 class Gauge:
     def __init__(self, screen, FONT, x_cord, y_cord, thickness, radius, circle_colour, glow=True):
@@ -96,16 +97,40 @@ class GaugeHandler(Gauge):
 		self.gauge.draw(percent=self.percentage)
 		pygame.display.update()
 		self.clock.tick(self.settings['frame rate fps'])
+		
+	def clear(self):
+		self.screen.fill(self.settings['background color'])
+		pygame.display.update()
+		self.clock.tick(self.settings['frame rate fps'])
+class GaugeServer():
+	def __init__(self,host,port):
+		self.gauge = GaugeHandler()
+		self.gauge.set(0)
+		self.host = host
+		self.port = port
+		while True:
+			self.next_int()
+			
+	def next_int(self):
+		with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
+			sock.bind((self.host,self.port))
+			sock.listen()
+			conn, addr = sock.accept()
+			with conn:
+				print("Connected by" + str(addr))
+				while True:
+					data = conn.recv(1024)
+					if not data:
+						break
+					msg = data.decode()
+					print(msg)
+					self.gauge.set(int(msg))			
 
 if __name__ == '__main__':
-	gauge = GaugeHandler()
-	percentage = 0
-	while True:
-		# FOR SHOWING CHANGE IN GAUGE
-		percentage+=1
-		if percentage > 100:
-			percentage = 0
-		gauge.set(percentage=percentage)
-
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--host', type=str, required=True)
+	parser.add_argument('--port', type=int, required=True)
+	args = parser.parse_args()
+	server = GaugeServer(args.host,args.port)
 	
         
